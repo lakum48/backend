@@ -1,0 +1,27 @@
+// Переменные
+$primary-color: #3498db;
+$secondary-color: #2ecc71;
+$font-stack: 'Arial', sans-serif;
+
+// Основные стили
+body {
+  font-family: $font-stack;
+  background-color: #f4f4f4;
+
+}
+.container{
+  color: $primary-color;
+}
+
+.btn-custom {
+  background-color: $primary-color;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: $secondary-color;
+  }
+}
