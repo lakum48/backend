@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель администратора</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input, textarea, button {
+            display: block;
+            margin-bottom: 10px;
+            padding: 8px;
+            width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Панель администратора</h1>
+
+    <!-- Форма для добавления товара -->
+    <h2>Добавить товар</h2>
+    <form id="addProductForm">
+        <input type="number" id="id" placeholder="ID" required>
+        <input type="text" id="name" placeholder="Название" required>
+        <input type="number" id="price" placeholder="Цена" required>
+        <textarea id="description" placeholder="Описание" required></textarea>
+        <input type="text" id="category" placeholder="Категория" required>
+        <button type="submit">Добавить</button>
+    </form>
+
+    <!-- Форма для редактирования товара -->
+    <h2>Редактировать товар</h2>
+    <form id="editProductForm">
+        <input type="number" id="editId" placeholder="ID товара" required>
+        <input type="text" id="editName" placeholder="Новое название">
+        <input type="number" id="editPrice" placeholder="Новая цена">
+        <textarea id="editDescription" placeholder="Новое описание"></textarea>
+        <input type="text" id="editCategory" placeholder="Новая категория">
+        <button type="submit">Редактировать</button>
+    </form>
+
+    <!-- Форма для удаления товара -->
+    <h2>Удалить товар</h2>
+    <form id="deleteProductForm">
+        <input type="number" id="deleteId" placeholder="ID товара" required>
+        <button type="submit">Удалить</button>
+    </form>
+
+    <script>
+        // Добавление товара
+        document.getElementById('addProductForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const product = {
+                id: parseInt(document.getElementById('id').value),
+                name: document.getElementById('name').value,
+                price: parseFloat(document.getElementById('price').value),
+                description: document.getElementById('description').value,
+                category: document.getElementById('category').value
+            };
+
+            try {
+                const response = await fetch('http://localhost:8080/api/products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(product)
+                });
+
+                if (response.ok) {
+                    alert('Товар добавлен!');
+                } else {
+                    alert('Ошибка при добавлении товара');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Ошибка при добавлении товара');
+            }
+        });
+
+        // Редактирование товара
+        document.getElementById('editProductForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const productId = parseInt(document.getElementById('editId').value);
+            const updatedData = {
+                name: document.getElementById('editName').value,
+                price: parseFloat(document.getElementById('editPrice').value),
+                description: document.getElementById('editDescription').value,
+                category: document.getElementById('editCategory').value
+            };
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/products/${productId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedData)
+                });
+
+                if (response.ok) {
+                    alert('Товар обновлен!');
+                } else {
+                    alert('Ошибка при обновлении товара');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Ошибка при обновлении товара');
+            }
+        });
+
+        // Удаление товара
+        document.getElementById('deleteProductForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const productId = parseInt(document.getElementById('deleteId').value);
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/products/${productId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Товар удален!');
+                } else {
+                    alert('Ошибка при удалении товара');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Ошибка при удалении товара');
+            }
+        });
+    </script>
+</body>
+</html>
