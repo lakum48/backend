@@ -47,5 +47,12 @@
     "price": 40000,
     "description": "4K телевизор с HDR.",
     "category": "Электроника"
+  },
+  {
+    "id": 9,
+    "name": "Кукла",
+    "price": 123123,
+    "description": "кукла",
+    "category": "игрушки"
   }
 ]

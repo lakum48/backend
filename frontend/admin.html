@@ -4,56 +4,109 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Панель администратора</title>
+    <link rel="stylesheet" href="style.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
         form {
             margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
         }
-        input, textarea, button {
+        input, textarea, button, select {
             display: block;
             margin-bottom: 10px;
             padding: 8px;
             width: 300px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .notification {
+            color: #666;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
     <h1>Панель администратора</h1>
 
-    <!-- Форма для добавления товара -->
-    <h2>Добавить товар</h2>
+    <div id="chat-container">
+        <h2>Чат поддержки клиентов</h2>
+        <div id="chat-messages"></div>
+        <input type="text" id="message-input" placeholder="Введите ответ">
+        <button id="send-button">Отправить</button>
+    </div>
+
     <form id="addProductForm">
+        <h2>Добавить товар</h2>
         <input type="number" id="id" placeholder="ID" required>
         <input type="text" id="name" placeholder="Название" required>
         <input type="number" id="price" placeholder="Цена" required>
         <textarea id="description" placeholder="Описание" required></textarea>
         <input type="text" id="category" placeholder="Категория" required>
-        <button type="submit">Добавить</button>
+        <button type="submit">Добавить товар</button>
     </form>
 
-    <!-- Форма для редактирования товара -->
-    <h2>Редактировать товар</h2>
     <form id="editProductForm">
+        <h2>Редактировать товар</h2>
         <input type="number" id="editId" placeholder="ID товара" required>
         <input type="text" id="editName" placeholder="Новое название">
         <input type="number" id="editPrice" placeholder="Новая цена">
         <textarea id="editDescription" placeholder="Новое описание"></textarea>
         <input type="text" id="editCategory" placeholder="Новая категория">
-        <button type="submit">Редактировать</button>
+        <button type="submit">Редактировать товар</button>
     </form>
 
-    <!-- Форма для удаления товара -->
-    <h2>Удалить товар</h2>
     <form id="deleteProductForm">
+        <h2>Удалить товар</h2>
         <input type="number" id="deleteId" placeholder="ID товара" required>
-        <button type="submit">Удалить</button>
+        <button type="submit">Удалить товар</button>
     </form>
 
     <script>
-        // Добавление товара
+        // WebSocket чат
+        const chatSocket = new WebSocket('ws://localhost:8081');
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+
+        chatSocket.onopen = () => {
+            chatSocket.send(JSON.stringify({ type: 'admin' }));
+        };
+
+        chatSocket.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            const messageElement = document.createElement('div');
+            
+            if (message.type === 'notification') {
+                messageElement.innerHTML = `<p class="notification">${message.message}</p>`;
+            } else if (message.type === 'message') {
+                messageElement.innerHTML = `
+                    <p><strong>${message.from === 'admin' ? 'Вы' : 'Клиент'}:</strong> 
+                    ${message.text} <em>${new Date(message.timestamp).toLocaleTimeString()}</em></p>
+                `;
+            }
+            chatMessages.appendChild(messageElement);
+        };
+
+        sendButton.addEventListener('click', () => {
+            const text = messageInput.value.trim();
+            if (text) {
+                chatSocket.send(JSON.stringify({ 
+                    type: 'message', 
+                    text: text 
+                }));
+                messageInput.value = '';
+            }
+        });
+
+        // Управление товарами
         document.getElementById('addProductForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const product = {
@@ -73,6 +126,7 @@
 
                 if (response.ok) {
                     alert('Товар добавлен!');
+                    e.target.reset();
                 } else {
                     alert('Ошибка при добавлении товара');
                 }
@@ -82,7 +136,6 @@
             }
         });
 
-        // Редактирование товара
         document.getElementById('editProductForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const productId = parseInt(document.getElementById('editId').value);
@@ -102,6 +155,7 @@
 
                 if (response.ok) {
                     alert('Товар обновлен!');
+                    e.target.reset();
                 } else {
                     alert('Ошибка при обновлении товара');
                 }
@@ -111,7 +165,6 @@
             }
         });
 
-        // Удаление товара
         document.getElementById('deleteProductForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const productId = parseInt(document.getElementById('deleteId').value);
@@ -123,6 +176,7 @@
 
                 if (response.ok) {
                     alert('Товар удален!');
+                    e.target.reset();
                 } else {
                     alert('Ошибка при удалении товара');
                 }

@@ -1,13 +1,14 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const cors = require('cors'); // Подключаем cors
+const cors = require('cors');
 
 const app = express();
 const PORT = 8080;
 
-// Разрешаем запросы с любого источника (для разработки)
+// Разрешаем запросы с любого источника
 app.use(cors());
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 // Загрузка данных из JSON-файла
 const productsPath = path.join(__dirname, 'products.json');

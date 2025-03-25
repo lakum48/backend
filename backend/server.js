@@ -1,8 +1,9 @@
-// server.js
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const cors = require('cors'); // Подключаем cors
+const cors = require('cors');
+const { graphqlHTTP } = require('express-graphql');
+const schema = require('./schema');
 
 const app = express();
 const PORT = 3000;
@@ -11,19 +12,21 @@ const PORT = 3000;
 const productsPath = path.join(__dirname, 'products.json');
 let products = JSON.parse(fs.readFileSync(productsPath, 'utf-8'));
 
-// Middleware для обработки JSON
+// Middleware
 app.use(express.json());
-
-// Разрешаем запросы с любого источника (для разработки)
 app.use(cors());
-
-// Отдача статических файлов (HTML, CSS)
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Маршрут для получения всех товаров
+// REST API для товаров
 app.get('/api/products', (req, res) => {
     res.json(products);
 });
+
+// GraphQL endpoint
+app.use('/graphql', graphqlHTTP({
+    schema,
+    graphiql: true
+}));
 
 // Запуск сервера
 app.listen(PORT, () => {

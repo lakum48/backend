@@ -8,26 +8,120 @@
 </head>
 <body>
     <h1>Каталог товаров</h1>
+    
+    <div id="filter-controls">
+        <select id="category-filter">
+            <option value="">Все категории</option>
+            <option value="Электроника">Электроника</option>
+            <option value="Бытовая техника">Бытовая техника</option>
+        </select>
+        <input type="number" id="max-price" placeholder="Макс. цена">
+        <select id="fields-select">
+            <option value="name,price,description,category">Все поля</option>
+            <option value="name,price">Название и цена</option>
+            <option value="name,description">Название и описание</option>
+        </select>
+        <button id="apply-filters">Применить фильтры</button>
+    </div>
+    
     <div id="products"></div>
+    
+    <div id="chat-container">
+        <h2>Чат поддержки</h2>
+        <div id="chat-messages"></div>
+        <input type="text" id="message-input" placeholder="Введите ваше сообщение">
+        <button id="send-button">Отправить</button>
+    </div>
 
     <script>
-        // Загрузка товаров с сервера
-        fetch('http://localhost:3000/api/products')
-            .then(response => response.json())
-            .then(data => {
-                const productsContainer = document.getElementById('products');
-                data.forEach(product => {
-                    const productCard = document.createElement('div');
-                    productCard.className = 'product-card';
-                    productCard.innerHTML = `
-                        <h2>${product.name}</h2>
-                        <p>Цена: ${product.price} руб.</p>
-                        <p>${product.description}</p>
-                        <p>Категория: ${product.category}</p>
-                    `;
-                    productsContainer.appendChild(productCard);
-                });
+        // WebSocket чат
+        const chatSocket = new WebSocket('ws://localhost:8081');
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+
+        chatSocket.onopen = () => {
+            chatSocket.send(JSON.stringify({ type: 'client' }));
+        };
+
+        chatSocket.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            const messageElement = document.createElement('div');
+            
+            if (message.type === 'message') {
+                messageElement.innerHTML = `
+                    <p><strong>${message.from === 'admin' ? 'Поддержка' : 'Вы'}:</strong> 
+                    ${message.text} <em>${new Date(message.timestamp).toLocaleTimeString()}</em></p>
+                `;
+                chatMessages.appendChild(messageElement);
+            }
+        };
+
+        sendButton.addEventListener('click', () => {
+            const text = messageInput.value.trim();
+            if (text) {
+                chatSocket.send(JSON.stringify({ 
+                    type: 'message', 
+                    text: text 
+                }));
+                messageInput.value = '';
+            }
+        });
+
+        // GraphQL запросы товаров
+        async function fetchProducts(fields = 'name,price,description,category', category = '', maxPrice = null) {
+            const query = `
+                query {
+                    products(fields: "${fields}", ${category ? `category: "${category}",` : ''} 
+                    ${maxPrice ? `maxPrice: ${maxPrice},` : ''}) {
+                        ${fields.split(',').join(' ')}
+                    }
+                }
+            `;
+
+            const response = await fetch('http://localhost:3000/graphql', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query })
             });
+
+            const result = await response.json();
+            return result.data.products;
+        }
+
+        function displayProducts(products) {
+            const container = document.getElementById('products');
+            container.innerHTML = '';
+            
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                
+                let html = '';
+                if (product.name) html += `<h3>${product.name}</h3>`;
+                if (product.price) html += `<p>Цена: ${product.price} руб.</p>`;
+                if (product.description) html += `<p>${product.description}</p>`;
+                if (product.category) html += `<p>Категория: ${product.category}</p>`;
+                
+                card.innerHTML = html;
+                container.appendChild(card);
+            });
+        }
+
+        document.getElementById('apply-filters').addEventListener('click', async () => {
+            const category = document.getElementById('category-filter').value;
+            const maxPrice = document.getElementById('max-price').value || null;
+            const fields = document.getElementById('fields-select').value;
+            
+            const products = await fetchProducts(fields, category, maxPrice);
+            displayProducts(products);
+        });
+
+        // Первоначальная загрузка
+        document.addEventListener('DOMContentLoaded', async () => {
+            const products = await fetchProducts();
+            displayProducts(products);
+        });
     </script>
 </body>
 </html>
