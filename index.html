@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои Заметки</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4285f4">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Мои Заметки</h1>
+        <div id="offline-status" class="hidden">Вы в офлайн-режиме</div>
+        <button id="install-btn" class="hidden">Установить приложение</button>
+    </header>
+    
+    <main>
+        <div class="note-editor">
+            <textarea id="note-input" placeholder="Введите текст заметки..."></textarea>
+            <button id="add-note">Добавить</button>
+        </div>
+        
+        <div id="notes-list"></div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
